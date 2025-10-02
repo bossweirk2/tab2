@@ -1,39 +1,61 @@
 import streamlit as st
 from streamlit_drawable_canvas import st_canvas
+import random, time
 
-st.title("Tablero para dibujo")
+# Lista de retos creativos
+retos = [
+    "🎭 Dibuja una máscara mágica",
+    "🐉 Dibuja un dragón feliz",
+    "🌌 Inventa un nuevo planeta",
+    "🤖 Dibuja un robot haciendo yoga",
+    "🐢 Dibuja una tortuga voladora",
+    "🍕 Dibuja la pizza más extraña del mundo",
+    "👑 Dibuja la corona de un rey alienígena",
+]
 
-with st.sidebar:
-    st.subheader("Propiedades del Tablero")
+st.title("⚡ Reto Creativo con Tiempo")
 
-    # Canvas dimensions (moved to the top)
-    st.subheader("Dimensiones del Tablero")
-    canvas_width = st.slider("Ancho del tablero", 300, 700, 500, 50)
-    canvas_height = st.slider("Alto del tablero", 200, 600, 300, 50)
+# Inicializamos variables de sesión
+if "reto_actual" not in st.session_state:
+    st.session_state.reto_actual = None
+if "tiempo_inicio" not in st.session_state:
+    st.session_state.tiempo_inicio = None
+if "duracion" not in st.session_state:
+    st.session_state.duracion = 30  # segundos por defecto
 
-    # Drawing mode selector
-    drawing_mode = st.selectbox(
-        "Herramienta de Dibujo:",
-        ("freedraw", "line", "rect", "circle", "transform", "polygon", "point"),
-    )
+# --- CONFIGURACIÓN DEL RETO ---
+col1, col2 = st.columns(2)
 
-    # Stroke width slider
-    stroke_width = st.slider('Selecciona el ancho de línea', 1, 30, 15)
+with col1:
+    duracion = st.slider("⏱️ Duración del reto (segundos)", 10, 120, 30, 5)
 
-    # Stroke color picker
-    stroke_color = st.color_picker("Color de trazo", "#FFFFFF")
+with col2:
+    if st.button("🎲 Nuevo reto"):
+        st.session_state.reto_actual = random.choice(retos)
+        st.session_state.tiempo_inicio = time.time()
+        st.session_state.duracion = duracion
 
-    # Background color
-    bg_color = st.color_picker("Color de fondo", "#000000")
+# Mostrar reto actual
+if st.session_state.reto_actual:
+    st.subheader(f"👉 Tu reto: {st.session_state.reto_actual}")
 
-# Create a canvas component with dynamic key
-canvas_result = st_canvas(
-    fill_color="rgba(255, 165, 0, 0.3)",
-    stroke_width=stroke_width,
-    stroke_color=stroke_color,
-    background_color=bg_color,
-    height=canvas_height,
-    width=canvas_width,
-    drawing_mode=drawing_mode,
-    key=f"canvas_{canvas_width}_{canvas_height}",  # Dynamic key based on dimensions
-)
+    # Calculamos tiempo restante
+    tiempo_transcurrido = int(time.time() - st.session_state.tiempo_inicio)
+    tiempo_restante = st.session_state.duracion - tiempo_transcurrido
+
+    if tiempo_restante > 0:
+        st.markdown(f"⏳ Tiempo restante: **{tiempo_restante} seg**")
+
+        # --- CANVAS SOLO DISPONIBLE SI HAY TIEMPO ---
+        canvas_result = st_canvas(
+            fill_color="rgba(255, 165, 0, 0.3)",
+            stroke_width=3,
+            stroke_color="#FFFFFF",
+            background_color="#000000",
+            height=400,
+            width=500,
+            drawing_mode="freedraw",
+            key=f"canvas_{tiempo_restante}",
+        )
+    else:
+        st.error("⏰ ¡Se acabó el tiempo! Pasa al siguiente reto 🎉")
